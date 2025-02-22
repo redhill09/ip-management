@@ -7,10 +7,16 @@
                     <label for="ip-address">Ip Address</label>
                     <input type="text" class="form-control" name="ip" id="ip_address" placeholder="Ip Address">
                 </div>
+                @error('ip')
+                    <p class="bg-danger text-white">{{ $message }}</p>
+                @enderror
                 <div class="form-group">
                     <label for="ip-label">Label</label>
                     <input type="text" class="form-control" name="label" id="ip_label" placeholder="ex: John Doe">
                 </div>
+                @error('label')
+                    <p class="bg-danger text-white">{{ $message }}</p>
+                @enderror
                 <div class="form-group">
                     <label for="ip-comment">Comment</label>
                     <textarea class="form-control" name="comment" id="ip_comment"></textarea>

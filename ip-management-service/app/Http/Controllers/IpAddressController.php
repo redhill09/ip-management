@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\IpAddress;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 
 class IpAddressController extends Controller
@@ -35,58 +38,65 @@ class IpAddressController extends Controller
         $ipAddress = new IpAddress();
 
         $data = $request->validate([
-            'ip' => 'required|ip',
+            'ip' => ['required', 'ip', Rule::unique('ip_addresses', 'ip')],
             'label' => 'required|string|max:255',
-            'comment' => ''
+            'comment' => 'string|nullable'
         ]);
-        $data['user_id'] = 1;
+        $data['user_id'] = Session::get('id');
 
-        $response = $ipAddress->create($data);
+        $ipAddress->create($data);
         return redirect('/ipaddress')->with('success', 'IP Address added.');
-
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
-        $data = IpAddress::find($id);
-        return view('ipaddress.edit', [
-            'ip' => $data
-        ]);
-    }
+    public function show(string $id) {}
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(IpAddress $ipAddress)
+    public function edit(string $id)
     {
-        //
+        $ipData = IpAddress::find($id);
+
+        return view('ipaddress.edit', [
+            'ip' => $ipData
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(string $id, Request $request, IpAddress $ipAddress)
+    public function update(string $id, Request $request)
     {
-        $data = $request->validate([
-            'ip' => 'required|ip',
-            'label' => 'required|string|max:255',
-            'comment' => ''
-        ]);
-        $data['user_id'] = 1;
+        $ipData = IpAddress::find($id);
 
-        $response = $ipAddress->find($id)
-            ->update($data);
+        $data = $request->validate([
+            'ip' => ['required', 'ip', Rule::unique('ip_addresses', 'ip')->ignore($id)],
+            'label' => 'required|string|max:255',
+            'comment' => 'string|nullable'
+        ]);
+
+        if ($ipData->ip != $request->ip && $ipData->user_id != Session::get('id') && Auth::user()->role != "super-admin") {
+            return back()->with('error', 'Unauthorized action!');
+        }
+
+        $ipData->update($data);
         return redirect('/ipaddress')->with('success', 'IP Address updated.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(IpAddress $ipAddress)
+    public function destroy(string $id)
     {
-        //
+        if (Auth::user()->role != "super-admin") {
+            return back()->with('error', 'Unauthorized action!');
+        }
+
+        $data = IpAddress::findOrFail($id);
+        $data->delete();
+        return redirect('/ipaddress')->with('success', 'IP Address deleted.');
     }
 }

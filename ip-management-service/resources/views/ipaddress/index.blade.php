@@ -1,4 +1,13 @@
 <x-layout>
+    {{-- @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif --}}
+
     <div class="row">
         <div class="col align-self-center">
             <table class="table table-hover">
@@ -20,8 +29,10 @@
                             <td>{{ $ip->label }}</td>
                             <td>{{ $ip->comment }}</td>
                             <td>
-                                <a href="/ipaddress/show/{{ $ip->id }}" class="btn btn-success btn-sm">Edit</a>
-                                <a href="/ipaddress/delete/{{ $ip->id }}" class="btn btn-danger btn-sm">Delete</a>
+                                <a href="/ipaddress/edit/{{ $ip->id }}" class="btn btn-success btn-sm">View</a>
+                                @if (Auth::user()->role == 'super-admin')
+                                    <a href="/ipaddress/delete/{{ $ip->id }}" class="btn btn-danger btn-sm">Delete</a>
+                                @endif
                             </td>
                         </tr>
                     @endforeach

@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\AuditLog;
+use App\Models\IpAddress;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -13,19 +15,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        //Users
+        User::factory()->admin()->create();
+        User::factory()->regular()->create();
 
-        User::factory()->create([
-            'name' => 'Admin User',
-            'username' => 'admin',
-            'password' => bcrypt('admin'),
-            'role' => 'super-admin',
-        ]);
-        User::factory()->create([
-            'name' => 'Regular User',
-            'username' => 'regular',
-            'password' => bcrypt('regular'),
-            'role' => 'regular',
-        ]);
+        //IpAddress
+        $admin = User::where('role', 'super-admin')->first();
+        $user = User::where('role', 'regular')->first();
+
+        IpAddress::factory()->count(5)->create(['user_id' => $admin->id]);
+        IpAddress::factory()->count(5)->create(['user_id' => $user->id]);
+
+        //AuditLog
+        AuditLog::factory()->count(10)->create();
     }
 }

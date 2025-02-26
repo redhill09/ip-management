@@ -10,7 +10,8 @@
 
     <div class="row">
         <div class="col align-self-center">
-            <table class="table table-hover">
+            <h2 class="text-center">IP Addresses</h2>
+            <table class="table table-hover" id="ipTable">
                 <thead class="thead-dark">
                     <tr>
                         <th scope="col" style="vertical-align: middle">IP</th>
@@ -22,7 +23,7 @@
                         </th>
                     </tr>
                 </thead>
-                <tbody>
+                {{-- <tbody>
                     @foreach ($ips as $ip)
                         <tr>
                             <td>{{ $ip->ip }}</td>
@@ -36,9 +37,33 @@
                             </td>
                         </tr>
                     @endforeach
-                </tbody>
+                </tbody> --}}
             </table>
         </div>
 
     </div>
+    <script>
+        $(document).ready(function() {
+            $('#ipTable').DataTable({
+                "processing": true,
+                "serverSide": true,
+                "ajax": "{{ url('/ipaddress') }}",
+                "columns": [{
+                        "data": "ip"
+                    },
+                    {
+                        "data": "label"
+                    },
+                    {
+                        "data": "comment"
+                    },
+                    {
+                        "data": "actions",
+                        "orderable": false,
+                        "searchable": false
+                    }
+                ]
+            });
+        });
+    </script>
 </x-layout>

@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\IpAddress;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Yajra\DataTables\Facades\DataTables;
 
 
 class IpAddressController extends Controller
@@ -14,11 +16,22 @@ class IpAddressController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view("ipaddress.index", [
-            "ips" => IpAddress::all()
-        ]);
+        if ($request->ajax()) {
+            $ips = IpAddress::query();
+            return DataTables::of($ips)
+                ->addColumn('actions', function ($ip) {
+                    $buttons = '<a href="/ipaddress/edit/' . $ip->id . '" class="btn btn-success btn-sm">Edit</a>';
+                    if (Auth::user()->role == 'super-admin') {
+                        $buttons .= ' <a href="/ipaddress/delete/' . $ip->id . '" class="btn btn-danger btn-sm">Delete</a>';
+                    }
+                    return $buttons;
+                })
+                ->rawColumns(['actions'])
+                ->make(true);
+        }
+        return view('ipaddress.index');
     }
 
     /**
@@ -45,6 +58,8 @@ class IpAddressController extends Controller
         $data['user_id'] = Session::get('id');
 
         $ipAddress->create($data);
+        AuditLog::create(['user_id' => Auth::id(), 'action' => 'Created IP', 'details' => 'Created IP: ' . $data['ip']]);
+
         return redirect('/ipaddress')->with('success', 'IP Address added.');
     }
 
@@ -82,7 +97,16 @@ class IpAddressController extends Controller
             return back()->with('error', 'Unauthorized action!');
         }
 
+        $changes = [];
+        foreach ($data as $key => $value) {
+            if ($ipData[$key] != $value) {
+                $changes[] = "$key changed from '{$ipData[$key]}' to '{$value}'";
+            }
+        }
+
         $ipData->update($data);
+        AuditLog::create(['user_id' => Auth::id(), 'action' => 'Updated IP', 'details' => implode(', ', $changes)]);
+
         return redirect('/ipaddress')->with('success', 'IP Address updated.');
     }
 
@@ -96,7 +120,9 @@ class IpAddressController extends Controller
         }
 
         $data = IpAddress::findOrFail($id);
+        AuditLog::create(['user_id' => Auth::id(), 'action' => 'Deleted IP', 'details' => 'Deleted IP: ' . $data->ip]);
         $data->delete();
+
         return redirect('/ipaddress')->with('success', 'IP Address deleted.');
     }
 }

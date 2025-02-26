@@ -5,6 +5,7 @@
 
     <div class="row">
         <div class="col align-self-center">
+            <h2 class="text-center">Edit IP Address</h2>
             <form action="/ipaddress/update/{{ $ip->id }}" method="post">
                 @csrf
                 <div class="form-group">
